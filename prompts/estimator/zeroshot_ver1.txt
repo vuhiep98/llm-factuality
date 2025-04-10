@@ -1,0 +1,24 @@
+Your task is to compare a set of predicted atomic facts with a given set of ground-truth atomic facts, both sets are extracted from a given sentence. These predicted atomic facts are first extracted from a given sentence, and then each atomic fact is predicted with label "Support" (S), "Not-Support" (NS) or "Irrelevant" (IR). You need to compare each predicted atomic fact with each ground-truth atomic fact to evaluate the similar between two sets of atomic facts by the content and the label of each atomic fact. Provide some explanations for your comparisions.
+
+The output must follow the JSON format:
+```
+[
+    {
+        "fact": <atomic fact content>,
+        "extracted": "true" or "false",
+        "predicted": "true" or "false",
+        "explain": <explanation>
+    },
+    (... the other atomic facts)
+]
+```
+
+# Sentence: [SENTENCE]
+
+# The prediction:
+[PREDICTION]
+
+# The ground-truth:
+[GROUND-TRUTH]
+
+# Evaluate:"""

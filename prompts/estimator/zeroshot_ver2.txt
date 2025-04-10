@@ -1,0 +1,30 @@
+Your task is to compare a set of predicted atomic facts with a given set of ground-truth atomic facts, both sets are extracted from a given sentence. These predicted atomic facts are first extracted from a given sentence, and then each atomic fact is predicted with label "Support" (S), "Not-Support" (NS) or "Irrelevant" (IR). You need to compare each predicted atomic fact with each ground-truth atomic fact to evaluate the similar between two sets of atomic facts by the content and the label of each atomic fact. Provide some explanations for your comparisions.
+
+The output must follow this format:
+```
+[
+    {
+        "fact": <atomic fact content>,
+        "extracted": "true" or "false",
+        "predicted": "true" or "false",
+    },
+    (... the other atomic facts)
+]
+```
+Notes:
+- The atomic facts in the output must be ground-truth atomic facts
+- The "extracted" field is "true" if there exists a predicted atomic fact which is matched to the ground-truth atomic fact, else it is "false". Two facts are considered matched if they contain the same piece of information. The text in each atomic fact can be different, but information described in both facts must be 100% similar. Check each word in both predicted fact and ground-truth fact carefully because missing or exceeding one word may lead to the different between the meaning of two facts. Therefore, the "extracted" field should be "false" if the meaning in the predicted atomic fact is different from the meaning in the ground-truth atomic fact.
+- The "predicted" field is "true" if an "extracted" predicted atomic fact which is "semantically similar" to the ground-truth atomic fact and the label of the predicted atomic fact is exactly the same as the label of the ground-truth atomic fact, else it is "false". Therefore, if the "extracted" field is "false", the "predicted" field must be "false".
+- If the information in the predicted atomic fact is more general than the ground-truth atomic fact, the "extracted" field should be "true".
+- Even when the meaning in the predicted atomic fact is more general than the ground-truth atomic fact, they are still not considered matched. The meaning in both facts must be excatly the same.
+- Make sure the prediction among the atomic facts are consistent.
+
+# Sentence: [SENTENCE]
+
+# The prediction:
+[PREDICTION]
+
+# The ground-truth:
+[GROUND-TRUTH]
+
+# Evaluate:"""

@@ -1,0 +1,305 @@
+Your task is to compare a set of predicted atomic facts with a given set of ground-truth atomic facts, both sets are extracted from a given sentence. These predicted atomic facts are first extracted from a given sentence, and then each atomic fact is predicted with label "Support" (S), "Not-Support" (NS) or "Irrelevant" (IR). You need to compare each predicted atomic fact with each ground-truth atomic fact to evaluate the similar between two sets of atomic facts by the content and the label of each atomic fact. Provide some explanations for your comparisions.
+
+The output must follow this format:
+```
+[
+    {
+        "fact": <atomic fact content>,
+        "extracted": "true" or "false",
+        "predicted": "true" or "false",
+    },
+    (... the other atomic facts)
+]
+```
+Notes:
+- The atomic facts in the output must be ground-truth atomic facts
+- The "extracted" field is "true" if there exists a predicted atomic fact which is matched to the ground-truth atomic fact, else it is "false". Two facts are considered matched if they contain the same piece of information. The text in each atomic fact can be different, but information described in both facts must be 100% similar. Check each word in both predicted fact and ground-truth fact carefully because missing or exceeding one word may lead to the different between the meaning of two facts. Therefore, the "extracted" field should be "false" if the meaning in the predicted atomic fact is different from the meaning in the ground-truth atomic fact.
+- The "predicted" field is "true" if an "extracted" predicted atomic fact which is "semantically similar" to the ground-truth atomic fact and the label of the predicted atomic fact is exactly the same as the label of the ground-truth atomic fact, else it is "false". Therefore, if the "extracted" field is "false", the "predicted" field must be "false".
+- If the information in the predicted atomic fact is more general than the ground-truth atomic fact, the "extracted" field should be "true".
+- Even when the meaning in the predicted atomic fact is more general than the ground-truth atomic fact, they are still not considered matched. The meaning in both facts must be excatly the same.
+- Make sure the prediction among the atomic facts are consistent.
+
+Here are some examples:
+
+### Example
+# Sentence: Doug Sheehan is an American actor best known for his role as Ben Galvin in the hit television drama series, Knots Landing.
+
+# The prediction:
+Fact: Doug Sheehan is an American actor.
+Label: S
+Fact: Doug Sheehan is best known for his role as Ben Galvin.
+Label: NS
+Fact: Ben Galvin is a character.
+Label: S
+Fact: Knots Landing is a hit television drama series.
+Label: IR
+
+# The ground-truth:
+Fact: Doug Sheehan is an American.
+Label: S
+Fact: Doug Sheehan is an actor.
+Label: S
+Fact: Doug Sheehan is best known for his role as Ben Galvin.
+Label: NS
+Fact: Ben Galvin is a character in Knots Landing.
+Label: IR
+Fact: Knots Landing is a hit television series.
+Label: IR
+Fact: Knots Landing is a drama series.
+Label: IR
+
+# Evaluate:
+```
+[
+    {
+        "fact": "Doug Sheehan is an American.",
+        "extracted": "true",
+        "predicted": "true",
+        "explanation": "The text of this ground-truth atomic fact is \"Doug Sheehan is an American.\". A predicted atomic fact, \"Doug Sheehan is an American actor\", states the fact that Doug Sheehan is an American, which is simlar to the meaning of this ground-truth atomic fact. Therefore, the \"extracted\" field has the value \"true\". This predicted atomic fact has the label is \"S\", which is similar to the label of the ground-truth atomic fact. Therefore, the field \"predicted\" has the value \"true\"."
+    },
+    {
+        "fact": "Doug Sheehan is an actor.",
+        "extracted": "true",
+        "predicted": "true",
+        "explanation": "The text of this ground-truth atomic fact is \"Doug Sheehan is an actor.\". A predicted atomic fact, \"Doug Sheehan is an American actor\", states the fact that Doug Sheehan is an actor, which is simlar to the meaning of this ground-truth atomic fact. Therefore, the \"extracted\" field has the value \"true\". This predicted atomic fact has the label is \"S\", which is similar to the label of  the ground-truth atomic fact. Therefore, the field \"predicted\" has the value \"true\"."
+    },
+    {
+        "fact": "Doug Sheehan is best known for his role as Ben Galvin.",
+        "extracted": "true",
+        "predicted": "true",
+        "explanation": "A predicted atomic fact, \"Doug Sheehan is best known for his role as Ben Galvin.\", which is exactly the same as this ground-truth atomic fact. Therefore, the \"extracted\" field is \"true\". The label of this predicted atomic fact is \"NS\", which is simlar to the label of this ground-truth atomic fact. Therefore, the \"predicted\" field　is true."
+    }, 
+    {
+        "fact": "Ben Galvin is a character in Knots Landing.",
+        "extracted": "false",
+        "predicted": "false",
+        "explanation": "The text of this ground-truth atomic fact is \"Ben Galvin is a character in Knots Landing.\". No predicted atomic facts state the same piece of information as this ground-truth fact. The most similar predicted atomic fact to this ground-truth atomic fact is \"Ben Galvin is a character.\". However, this predicted atomic fact only states that Ben Galvin is a chacracter, but does not mention that Ben Galvin is a character in Knots Landing. Therefore, the \"extracted\" field is \"false\". The \"extracted\" field is \"false\", then the \"predicted\" field is also \"false\"."
+    },
+    {
+        "fact": "Knots Landing is a hit television series.",
+        "extracted": "true",
+        "predicted": "true",
+        "explanation": "In the prediction, the atomic fact \"Knots Landing is a hit television drama series.\" has a wider meaning (\"a hit television drama series\" with \"a hit television series\") and states the same piece of information as this ground-truth atomic fact. Therefore, the \"extracted\" field is true. The label of the predicted atomic fact is IR, which is similar to the label of this ground-truth atomic fact. Therefore, the \"predicted\" field is true."
+    },
+    {
+        "fact": "Knots Landing is a drama series.",
+        "extracted": "",
+        "predicted": "",
+        "explanation":  "In the prediction, the atomic fact \"Knots Landing is a hit television drama series.\" has a wider meaning (\"a hit television drama series\" with \"a hit drama series\") and states the same piece of information as this ground-truth atomic fact. Therefore, the \"extracted\" field is true. The label of the predicted atomic fact is IR, which is similar to the label of this ground-truth atomic fact. Therefore, the \"predicted\" field is true."
+    }
+]
+```
+
+### Example
+# Sentence: He has also appeared in films such as The Big Easy and The Last Boy Scout, and television shows such as NYPD Blue and Beverly Hills, 90210.
+
+# The prediction:
+Fact: He has appeared in films.
+Label: S
+Fact: He has appeared in The Big Easy.
+Label: S
+Fact: The Big Easy is a film.
+Label: NS
+Fact: He has appeared in The Last Boy Scout.
+Label: NS
+Fact: The Last Boy Scout is a film.
+Label: NS
+Fact: He has appeared in television shows.
+Label: NS
+Fact: He has appeared in NYPD Blue.
+Label: NS
+Fact: NYPD Blue is a television show.
+Label: S
+Fact: He has appeared in Beverly Hills, 90210.
+Label: S
+Fact: Beverly Hills, 90210 is a television show.
+Label: S
+
+# The ground-truth:
+Fact: He has appeared in films.
+Label: S
+Fact: He has appeared in The Big Easy.
+Label: NS
+Fact: The Big Easy is a film.
+Label: IR
+Fact: He has appeared in The Last Boy Scout.
+Label: NS
+Fact: The Last Boy Scout is a film.
+Label: IR
+Fact: He has appeared in television shows.
+Label: S
+Fact: He has appeared in NYPD Blue.
+Label: NS
+Fact: NYPD Blue is a television show.
+Label: IR
+Fact: He has appeared in Beverly Hills, 90210.
+Label: NS
+Fact: Beverly Hills, 90210 is a television show.
+Label: IR
+
+# Evaluate:
+```
+[
+    {
+        "fact": "He has appeared in films.",
+        "extracted": "true",
+        "predicted": "true",
+        "explanation": "In the prediction, there exists an atomic fact which has the same fact and same label compared to this ground-truth atomic fact. Therefore, both \"extracted\" and \"predicted\" fields are true."
+    },
+    {
+        "fact": "He has appeared in The Big Easy.",
+        "extracted": "true",
+        "predicted": "false",
+        "explanation": "In the prediction, there exists an atomic fact which has the same fact compared to this ground-truth atomic fact. Therefore, the \"extracted\" field is true. However, the label of this predicted atomic fact is \"S\", which is different from this ground-truth atomic fact's label (\"NS\"). Therefore, the \"predicted\" field is false."
+    },
+    {
+        "fact": "The Big Easy is a film.",
+        "extracted": "true",
+        "predicted": "false",
+        "explanation": "In the prediction, there exists an atomic fact which has the same fact compared to this ground-truth atomic fact. Therefore, the \"extracted\" field is true. However, the label of this predicted atomic fact is \"IR\", which is different from this ground-truth atomic fact's label (\"NS\"). Therefore, the \"predicted\" field is false."
+    },
+    {
+        "fact": "He has appeared in The Last Boy Scout.",
+        "extracted": "true",
+        "predicted": "true",
+        "explanation": "In the prediction, there exists an atomic fact which has the same fact and same label compared to this ground-truth atomic fact. Therefore, both \"extracted\" and \"predicted\" fields are true."
+    },
+    {
+        "fact": "The Last Boy Scout is a film.",
+        "extracted": "true",
+        "predicted": "false",
+        "explanation": "In the prediction, there exists an atomic fact which has the same fact compared to this ground-truth atomic fact. Therefore, the \"extracted\" field is true. However, the label of this predicted atomic fact is \"NS\", which is different from this ground-truth atomic fact's label (\"IR\"). Therefore, the \"predicted\" field is false."
+    },
+    {
+        "fact": "He has appeared in television shows.",
+        "extracted": "true",
+        "predicted": "false",
+        "explanation": "In the prediction, there exists an atomic fact which has the same fact compared to this ground-truth atomic fact. Therefore, the \"extracted\" field is true. However, the label of this predicted atomic fact is \"NS\", which is different from this ground-truth atomic fact's label (\"S\"). Therefore, the \"predicted\" field is false."
+    },
+    {
+        "fact": "He has appeared in NYPD Blue.",
+        "extracted": "true",
+        "predicted": "true",
+        "explanation": "In the prediction, there exists an atomic fact which has the same fact and same label compared to this ground-truth atomic fact. Therefore, both \"extracted\" and \"predicted\" fields are true."
+    },
+    {
+        "fact": "NYPD Blue is a television show.",
+        "extracted": "true",
+        "predicted": "false",
+        "explanation": "In the prediction, there exists an atomic fact which has the same fact compared to this ground-truth atomic fact. Therefore, the \"extracted\" field is true. However, the label of this predicted atomic fact is \"S\", which is different from this ground-truth atomic fact's label (\"IR\"). Therefore, the \"predicted\" field is false."
+    },
+    {
+        "fact": "He has appeared in Beverly Hills, 90210.",
+        "extracted": "true",
+        "predicted": "false",
+        "explanation": "In the prediction, there exists an atomic fact which has the same fact compared to this ground-truth atomic fact. Therefore, the \"extracted\" field is true. However, the label of this predicted atomic fact is \"S\", which is different from this ground-truth atomic fact's label (\"NS\"). Therefore, the \"predicted\" field is false."
+    },
+    {
+        "fact": "Beverly Hills, 90210 is a television show.",
+        "extracted": "true",
+        "predicted": "false",
+        "explanation": "In the prediction, there exists an atomic fact which has the same fact compared to this ground-truth atomic fact. Therefore, the \"extracted\" field is true. However, the label of this predicted atomic fact is \"S\", which is different from this ground-truth atomic fact's label (\"IR\"). Therefore, the \"predicted\" field is false."
+    }
+]
+```
+
+### Example
+# Sentence: Sheehan attended the University of California, Los Angeles, where he received a Bachelor of Arts degree in Theatre Arts.
+
+# The prediction:
+Fact: Sheehan attended the University of California, Los Angeles.
+Label: S
+Fact: He received a Bachelor of Arts degree.
+Label: S
+Fact: He received a Bachelor of Arts degree in Theatre Arts.
+Label: S
+
+# The ground-truth:
+Fact: Sheehan attended the University of California.
+Label: NS
+Fact: California is in Los Angeles.
+Label: NS
+Fact: He received a Bachelor of Arts degree.
+Label: NS
+Fact: His Bachelor of Arts degree is in Theatre Arts.
+Label: NS
+
+# Evaluate:
+```
+[
+    {
+        "fact": "Sheehan attended the University of California.",
+        "extracted": "true",
+        "predicted": "false",
+        "explanation": "In the prediction, the atomic fact \"Sheehan attended the University of California, Los Angeles.\" has a wider meaning (\"California, Los Angeles\" with \"California\") and states the same piece of information as this ground-truth atomic fact. Therefore, the \"extracted\" field is true. However, the label of the predicted atomic fact is S, which is not similar to the label of this ground-truth atomic fact (NS). Therefore, the \"predicted\" field is false."
+    },
+    {
+        "fact": "California is in Los Angeles.",
+        "extracted": "false",
+        "predicted": "false",
+        "explanation": "In the prediction, there are no atomic facts that hava similar facts to this ground-truth atomic fact's fact. Therefore, the \"extracted\" and the \"predicted\" fields are false."
+    },
+    {
+        "fact": "He received a Bachelor of Arts degree.",
+        "extracted": "true",
+        "predicted": "false",
+        "explanation": "In the prediction, there exists an atomic fact which has the same fact compared to this ground-truth atomic fact. Therefore, the \"extracted\" field is true. However, the label of this predicted atomic fact is \"S\", which is different from this ground-truth atomic fact's label (\"NS\"). Therefore, the \"predicted\" field is false."
+    },
+    {
+        "fact": "His Bachelor of Arts degree is in Theatre Arts.",
+        "extracted": "true",
+        "predicted": "false",
+        "explanation": "An atomic fact in the prediction state the fact that Sheehan received a Bachelor of Arts degree in Theatre Arts. This fact is similar to the fact provided by this ground-truth atomic fact, which states that Sheehan's Bachelor of Arts degree is in Theatre Arts. Therefore, the \"extracted\" field is true. However, the label of the above predicted atomic fact is \"S\", which is different compared to the label of this ground-truth atomic fact (\"NS\"). Therefore, the \"predicted\" field is false."
+    }
+]
+```
+
+### Example
+# Sentence: He is a strong believer in collaboration and the power of working together to achieve more.
+
+# The prediction:
+Fact: He is a believer.
+Label: NS
+Fact: He is a strong believer.
+Label: S
+Fact: He believes in collaboration.
+Label: IR
+Fact: He believes in the power of working together.
+Label: IR
+Fact: He believes in the power of working together to achieve more.
+Label: NS
+
+# The ground-truth:
+Fact: He is a strong believer in collaboration.
+Label: NS
+Fact: He is a strong believer in the power of working together to achieve more.
+Label: NS
+
+# Evaluate:
+```
+[
+    {
+        "fact": "He is a strong believer in collaboration.",
+        "extracted": "false",
+        "predicted": "false",
+        "explanation": "This ground-truth atomic fact mention that the man is a strong believer in collaboration. In the \"prediction\", there are three atomic facts that are similar to this ground-truth atomic fact. The first atomic fact is \"He is believer.\", which states that the man is a believer. However, compared to the ground-truth atomic fact, this predicted atomic fact lacks the information about the man is a strong believer and he believes in collaboration. The second predicted atomic fact is \"He is a strong believer\". This predicted atomic fact lacks the information about the man believes in collaboration. The third predicted atomic fact is \"He believes in collaboration\". This predicted atomic fact lacks the information about the man's belief is strong. So, none of the above predicted atomic facts is similar to the ground-truth atomic fact. Therefore, the \"extracted\" field and the \"predicted\" field are \"false\"."
+    },
+    {
+        "fact": "He is a strong believer in the power of working together to achieve more.",
+        "extracted": "false",
+        "predicted": "false",
+        "explanation": "This ground-truth atomic fact states that the man is a strong believer in the power of working together to achieve more. There is a predicted atomic fact which is quite similar to this ground-truth one. The predicted atomic fact states that the man believes in the power of working together to achieve more. However, compared to the ground-truth atomc fact, this predicted one lacks the information about the man is a strong believer. Therefore, these two atomic facts are not simlar and both the \"extracted\" field and the \"predicted\" field are \"false\"."
+    }
+]
+```
+
+### Example
+# Sentence: [SENTENCE]
+
+# The prediction:
+[PREDICTION]
+
+# The ground-truth:
+[GROUND-TRUTH]
+
+# Evaluate:"""
