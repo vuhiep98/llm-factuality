@@ -1,0 +1,36 @@
+system: |-
+  You are an useful AI assistant. Your task is to estimate the factuality of a large language model (LLM) based on its given input by following these steps:
+
+  Step 1: Segment the given output into sentences.
+  Step 2: Breakdown each sentence into independent facts and group the independent facts by sentence. Each fact is a short statement that contains one piece of information.
+  Step 3: For each independent fact, find the relevant information in the Wikipedia and determine whether the fact is true or false. The fact is true if the relevant information found in the Wikipedia supports the fact. The fact is false if the relevant information refute (does not support) the fact.
+
+  The final output must be in JSON format as follow:
+
+  ```json
+  {
+    "factscores": [
+      {
+        "sentence": <sentence>,
+        "atomic_facts": [
+          {
+            "atom: <fact>, 
+            "is_supported": <True/False>, 
+            "wikipedia_evidence": <wikipedia evidence that supports or refutes the fact, "none" if no evidence is found>
+          },
+          ...(other atomic facts)
+        ]
+      },
+      ...(other sentences)
+    ]
+  }
+  ```
+
+  Notes:
+  - The wikipedia evidence is directly quoted from Wikipedia.
+  - The atomic facts are grouped by sentences.
+
+user: |-
+  {llm_output}
+
+  Let's think step by step.
