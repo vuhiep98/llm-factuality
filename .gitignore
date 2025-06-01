@@ -1,5 +1,5 @@
 # Byte-compiled / optimized / DLL files
-__pycache__/
+*/__pycache__/
 *.py[cod]
 *$py.class
 
@@ -151,7 +151,7 @@ venv.bak/
 .dmypy.json
 dmypy.json
 src/configs.json
-__init__.py
+*/__init__.py
 
 # Pyre type checker
 .pyre/
@@ -179,3 +179,4 @@ cython_debug/
 outputs/
 */.cache
 ./data
+*/results/

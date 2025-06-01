@@ -1,8 +1,6 @@
 import json
 import re
-import sys
-import spacy
-import argparse
+import os
 import numpy as np
 from pathlib import Path
 from tqdm import tqdm
@@ -10,12 +8,12 @@ from pathlib import Path
 from nltk.tokenize import sent_tokenize
 from transformers import BertModel, BertTokenizer
 from sklearn.metrics.pairwise import cosine_similarity
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 bert_tokenizer = BertTokenizer.from_pretrained("google-bert/bert-base-uncased")
 bert_model = BertModel.from_pretrained("google-bert/bert-base-uncased", device_map="cuda")
-
-nlp = spacy.load("en_core_web_sm")
-ners = ["PERSON", "GPE", "ORG", "PRODUCT"]
 
 def read_jsonl(file_path):
     data = []
@@ -23,17 +21,6 @@ def read_jsonl(file_path):
         for line in f:
             data.append(json.loads(line))
     return data
-
-def format_ne(text):
-    ne_map = {}
-    doc = nlp(text)
-    for ent in doc.ents:
-        if ent.label_ in ners and "." in ent.text:
-            formatted_ne = ent.text.replace(".", " ")
-            formatted_ne = " ".join([t.strip() for t in formatted_ne.split()])
-            text = text.replace(ent.text, formatted_ne)
-            ne_map[formatted_ne] = ent.text
-    return text, ne_map
 
 def fix_sentence_splitter(curr_sentences, initials):
     for initial in initials:
@@ -74,14 +61,9 @@ def detect_initials(text):
     return [m for m in match]
 
 def split_sentences(lm_generation):
-    ne_formatted_text, ner_maps = format_ne(lm_generation["output"])
-    sentences = sent_tokenize(ne_formatted_text)
+    sentences = sent_tokenize(lm_generation["output"])
     initials = detect_initials(lm_generation["input"])
     sentences = fix_sentence_splitter(sentences, initials)
-    for i, sentence in enumerate(sentences):
-        for formatted_ne, original_ne in ner_maps.items():
-            sentence = sentence.replace(formatted_ne, original_ne)
-        sentences[i] = sentence
     return sentences
 
 def extract_facts_to_list(input_text):
@@ -126,7 +108,7 @@ def text_similarity(str1, str2):
     return similarity_score
 #########################
 
-def get_atomic_facts(sentences, decisions, threshold=0.5):
+def get_atomic_facts(sentences, decisions):
     sentence2facts = {}
     for sentence in sentences:
         sentence2facts.setdefault(sentence, [])
@@ -135,51 +117,43 @@ def get_atomic_facts(sentences, decisions, threshold=0.5):
         for fact in decisions:
             scores = [(i, text_similarity(sentence, fact["atom"])) for i, sentence in enumerate(sentences)]
             best_score = max(scores, key=lambda x: x[1])
-            if best_score[1] > threshold:
-                sentence2facts[sentences[best_score[0]]].append(fact)
+            sentence2facts[sentences[best_score[0]]].append(fact)
     
     return sentence2facts
 
 if __name__ == "__main__":
-        
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--llm", type=str, required=True)
-    parser.add_argument("--threshold", type=float, required=True, default=0.5)
-    args = parser.parse_args()
     
-    llm_unlabled_folder = Path(__file__).parents[1]/"modules"/"FActSCORE"/"factscore_data"/"unlabeled"
-    llm_output_file = llm_unlabled_folder/f"{args.llm}_factscore_output.json"
-    llm_input_file = llm_unlabled_folder/f"{args.llm}.jsonl"
-    llm_mapped_file = llm_unlabled_folder/f"{args.llm}_factscore_output_mapped.jsonl"
-    threshold = args.threshold
-    if threshold > 1 or threshold < 0:
-        print("Threshold must be between 0 and 1")
-        sys.exit(1)
-    
-    factscores = json.load(open(llm_output_file))
-    inputs = read_jsonl(llm_input_file)
-
-    input_count = 0
-    factscore_count = 0
-    
-    with tqdm(total=len(inputs)) as pbar:
-        while input_count < len(inputs):
+    llm_unlabled_folder = Path(__file__).parents[2]/"data/unlabeled"
+    for llm_file in os.listdir(llm_unlabled_folder):
+        if llm_file.endswith(".jsonl") and llm_file != "InstructGPT.jsonl":
+            llm_output_file = llm_unlabled_folder/f"{llm_file.strip('.jsonl')}_factscore_output.json"
+            llm_input_file = llm_unlabled_folder/llm_file
+            llm_annotate_file = Path(__file__).parents[2]/"data/annotate_data"/llm_file
             
-            if 'Francisco Urroz' in inputs[input_count]["input"]:
-                input_count += 1
-                pbar.update(1)
-                continue
-                
-            sentences = split_sentences(inputs[input_count])
-            decisions = factscores["decisions"][factscore_count]
-            sentence2facts = get_atomic_facts(sentences, decisions, threshold)
-            inputs[input_count]['factscores'] = sentence2facts
-            
-            input_count += 1
-            factscore_count += 1
-            pbar.update(1)
+            factscores = json.load(open(llm_output_file))
+            inputs = read_jsonl(llm_input_file)
 
-    # Write to file:
-    print(f"Dump to {llm_mapped_file}")
-    with open(args.predict_file, "w") as f:
-        json.dump(inputs, f, indent=2)
+            input_count = 0
+            factscore_count = 0
+            
+            with tqdm(total=len(inputs), desc=llm_file.strip(".jsonl")) as pbar:
+                while input_count < len(inputs):
+                    
+                    if 'Francisco Urroz' in inputs[input_count]["input"]:
+                        input_count += 1
+                        pbar.update(1)
+                        continue
+                        
+                    sentences = split_sentences(inputs[input_count])
+                    decisions = factscores["decisions"][factscore_count]
+                    sentence2facts = get_atomic_facts(sentences, decisions)
+                    inputs[input_count]['factscores'] = sentence2facts
+                    
+                    input_count += 1
+                    factscore_count += 1
+                    pbar.update(1)
+
+            # Write to file:
+            logging.info(f"Finish mapping. Start dumping results to {llm_annotate_file}")
+            with open(llm_annotate_file, "w") as f:
+                json.dump(inputs, f, indent=4)
