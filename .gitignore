@@ -177,3 +177,5 @@ cython_debug/
 
 # Output files
 outputs/
+*/.cache
+./data
