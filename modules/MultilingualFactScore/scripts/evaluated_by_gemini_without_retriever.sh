@@ -1,2 +1,0 @@
-python3 -m factscore.factscorer --input_path "~/FActScore/data/to_evaluate/es/sub_task_1/gpt4.jsonl" --model_name "Gemini-Pro" --model_dir "~/projects/factscore/real_evaluation/" --data_dir "~/projects/factscore/real_evaluation/" --cache_dir "~/projects/factscore/real_evaluation/" --knowledge_source "eswiki" --lang "es" --use_atomic_facts --n_samples 110 --openai_key "~/projects/open_ai_key.txt" > ~/FActScore/data/output/real_evaluation/es_gpt4_by_gemini_without_retriever.txt
-
