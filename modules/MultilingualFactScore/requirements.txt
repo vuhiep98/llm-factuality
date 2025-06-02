@@ -1,0 +1,11 @@
+torch
+sentence_transformers
+transformers
+pysqlite3
+openai
+rank_bm25
+spacy
+sentencepiece 
+spacy
+protobuf
+peft
