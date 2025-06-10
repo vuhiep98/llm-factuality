@@ -3,20 +3,12 @@ cd ${WORKING_DIR}
 
 CUDA_VISIBLE_DEVICES=0
 
-python -m factscore.factscorer \
-    --input_path ../../../data/labeled/InstructGPT.jsonl \
-    --model_name retrieval+llama \
-    --output_path ../../outputs/factscore \
-    --verbose
-
-python -m factscore.factscorer \
-    --input_path ../../../data/labeled/ChatGPT.jsonl \
-    --model_name retrieval+llama \
-    --output_path ../../outputs/factscore \
-    --verbose
-
-python -m factscore.factscorer \
-    --input_path ../../../data/labeled/PerplexityAI.jsonl \
-    --model_name retrieval+llama \
-    --output_path ../../outputs/factscore \
-    --verbose
+# for LLM in InstructGPT ChatGPT PerplexityAI
+for LLM in InstructGPT
+do
+    python -m factscore.factscorer \
+        --input_path ../../../data/labeled/${LLM}.jsonl \
+        --model_name retrieval+llama \
+        --output_path ../../outputs/factscore \
+        --verbose > ../../outputs/logs/factscore_${LLM}_log_llama2.txt
+done

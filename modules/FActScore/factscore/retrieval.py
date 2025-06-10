@@ -196,13 +196,13 @@ class Retrieval(object):
         
         if cache_key not in self.cache:
             passages = self.db.get_text_from_title(topic)
-            if self.retrieval_type=="bm25":
-                self.cache[cache_key] = self.get_bm25_passages(topic, retrieval_query, passages, k)
-            else:
-                self.cache[cache_key] = self.get_gtr_passages(topic, retrieval_query, passages, k)
-            assert len(self.cache[cache_key]) in [k, len(passages)]
-            self.add_n += 1
-        
+        if self.retrieval_type=="bm25":
+            passages = self.get_bm25_passages(topic, retrieval_query, passages, k)
+        else:
+            passages = self.get_gtr_passages(topic, retrieval_query, passages, k)
+        self.cache[cache_key] = passages
+        assert len(self.cache[cache_key]) in [k, len(passages)]
+        self.add_n += 1
             
         return self.cache[cache_key]
 

@@ -26,12 +26,16 @@ class AtomicFactGenerator(object):
         self.model_name = model_name
         if self.model_name == "gpt" and key_path:
             self.lm = OpenAIModel("InstructGPT", cache_file=cache_file, key_path=key_path)
-        elif self.model_name == "llama":
+        elif self.model_name == "llama3":
             self.lm = CLM("llama3.1-8B",
                           model_dir="meta-llama/Llama-3.1-8B-Instruct",
                           cache_file=cache_file,
-                          use_cache=False)
-
+                          use_cache=True)
+        elif self.model == "llama2":
+            self.lm = CLM("inst-llama2-7B",
+                          model_dir="osunlp/attrscore-llama-7b",
+                          cache_file=cache_file,
+                          use_cache=True)
         # get the demos
         with open(self.demon_path, 'r') as f:
             self.demons = json.load(f)
@@ -161,7 +165,10 @@ def best_demos(query, bm25, demons_sents, k):
 # transform InstructGPT output into sentences
 def text_to_sentences(text):
     sentences = text.split("- ")[1:]
-    sentences = [sent.strip()[:-1] if sent.strip()[-1] == '\n' else sent.strip() for sent in sentences]
+    try:
+        sentences = [sent.strip()[:-1] if sent.strip()[-1] == '\n' else sent.strip() for sent in sentences]
+    except:
+        pass
     if len(sentences) > 0: 
         if sentences[-1][-1] != '.':
             sentences[-1] = sentences[-1] + '.' 

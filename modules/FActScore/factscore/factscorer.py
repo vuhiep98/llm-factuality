@@ -46,18 +46,18 @@ class FactScorer(object):
         self.cost_estimate = cost_estimate
 
         if "llama" in model_name:
-            self.lm = CLM(
-                "llama3.1-8B",
-                model_dir="meta-llama/Llama-3.1-8B-Instruct",
-                cache_file=os.path.join(cache_dir, "llama3.1-8B.pkl"),
-                use_cache=False
-            )
+            self.lm = CLM("llama3.1-8B",
+                        model_dir="meta-llama/Llama-3.1-8B-Instruct",
+                        cache_file=os.path.join(cache_dir, "llama3.1-8B.pkl"),
+                        use_cache=True)
+            self.lm = CLM("inst-llama-7B",
+                        model_dir="osunlp/attrscore-llama-7b",
+                        cache_file=os.path.join(cache_dir, "inst-llama-7B.pkl"),
+                        use_cache=True)
         elif "ChatGPT" in model_name:
-            self.lm = OpenAIModel(
-                "ChatGPT", 
-                cache_file=os.path.join(self.cache_dir, "GPT4.pkl"), 
-                key_path=openai_key
-            )
+            self.lm = OpenAIModel("ChatGPT", 
+                                cache_file=os.path.join(self.cache_dir, "GPT4.pkl"), 
+                                key_path=openai_key,)
         else:
             self.lm = None
 
@@ -138,7 +138,7 @@ class FactScorer(object):
                     self.af_generator = AtomicFactGenerator(
                         key_path=self.openai_key,
                         demon_dir=os.path.join(self.data_dir, "demos"),
-                        gpt3_cache_file=os.path.join(self.cache_dir, "atomic_extractor/AT_InstructGPT.pkl")
+                        cache_file=os.path.join(self.cache_dir, "atomic_extractor/AT_InstructGPT.pkl")
                     )
                 if "llama" in self.model_name:
                     self.af_generator = AtomicFactGenerator(
@@ -246,6 +246,8 @@ class FactScorer(object):
                     elif cost_estimate == "ignore_cache":
                         total_words += len(prompt.split())
                     continue
+                
+                print(prompt)
                 output = self.lm.generate(prompt)
 
                 # if type(output[1])==np.ndarray:
@@ -275,7 +277,10 @@ class FactScorer(object):
                 npprob = self.npm[knowledge_source].get_probabilty(topic, atom)
                 is_supported = npprob > 0.3
 
+            print(str(is_supported))
             decisions.append({"atom": atom, "is_supported": bool(is_supported)})
+            
+            print("##########################")
 
         if cost_estimate:
             return total_words
