@@ -45,7 +45,6 @@ def download_file(_id, dest, cache_dir):
             print("Unzip {} ... [Success]".format(dest))
 
 
-14
 def smart_tokenizer_and_embedding_resize(special_tokens_dict, tokenizer, model):
     """Resize tokenizer and embedding.
 
@@ -139,7 +138,7 @@ if __name__ == '__main__':
     download_file("1mekls6OGOKLmt7gYtHs0WGf5oTamTNat", "enwiki-20230401.db", args.data_dir)
 
     if args.llama_7B_HF_path:
-        recover_instruct_llama(args.llama_7B_HF_path, os.path.join(args.model_dir, "inst-llama-7B"))
+        recover_instruct_llama(args.llama_7B_HF_path, os.path.join(args.model_dir, "inst-llama-7B"), test_recovered_model=True)
 
     # download the roberta_stopwords.txt file
     subprocess.run(["wget https://raw.githubusercontent.com/shmsw25/FActScore/main/roberta_stopwords.txt"], shell=True)

@@ -27,7 +27,7 @@ class FactScorer(object):
                  cost_estimate="consider_cache",
                  abstain_detection_type=None,
                  batch_size=256):
-        assert model_name in ["retrieval+llama", "retrieval+llama+npm", "retrieval+ChatGPT", "npm", "retrieval+ChatGPT+npm"]
+        # assert model_name in ["retrieval+llama", "retrieval+llama+npm", "retrieval+ChatGPT", "npm", "retrieval+ChatGPT+npm"]
         self.model_name = model_name
 
         self.db = {}
@@ -45,13 +45,14 @@ class FactScorer(object):
         self.af_generator = None
         self.cost_estimate = cost_estimate
 
-        if "llama" in model_name:
+        if "llama3" in model_name:
             self.lm = CLM("llama3.1-8B",
                         model_dir="meta-llama/Llama-3.1-8B-Instruct",
                         cache_file=os.path.join(cache_dir, "llama3.1-8B.pkl"),
                         use_cache=True)
+        elif "llama2" in model_name:
             self.lm = CLM("inst-llama-7B",
-                        model_dir="osunlp/attrscore-llama-7b",
+                        model_dir=".cache/factscore/inst-llama-7B",
                         cache_file=os.path.join(cache_dir, "inst-llama-7B.pkl"),
                         use_cache=True)
         elif "ChatGPT" in model_name:
@@ -140,10 +141,16 @@ class FactScorer(object):
                         demon_dir=os.path.join(self.data_dir, "demos"),
                         cache_file=os.path.join(self.cache_dir, "atomic_extractor/AT_InstructGPT.pkl")
                     )
-                if "llama" in self.model_name:
+                elif "llama2" in self.model_name:
                     self.af_generator = AtomicFactGenerator(
                         demon_dir=os.path.join(self.data_dir, "demos"), 
-                        model_name="llama", 
+                        model_name="llama2",
+                        cache_file=os.path.join(self.cache_dir, "af-inst-llama-7B.pkl")
+                    )
+                elif "llama3" in self.model_name:
+                    self.af_generator = AtomicFactGenerator(
+                        demon_dir=os.path.join(self.data_dir, "demos"), 
+                        model_name="llama3",
                         cache_file=os.path.join(self.cache_dir, "af-llama3.1-8B-Instruct.pkl")
                     )
 
@@ -169,7 +176,7 @@ class FactScorer(object):
                 curr_afs, _ = self.af_generator.run(gen)
                 curr_afs = [fact for _, facts in curr_afs for fact in facts]
                 if len(curr_afs)==0:
-                    atomic_facts.append(None)
+                    atomic_facts.append([])
                 else:
                     atomic_facts.append(curr_afs)
                 if len(atomic_facts) % 10 == 0:
@@ -227,6 +234,18 @@ class FactScorer(object):
     def _get_score(self, topic, generation, atomic_facts, knowledge_source, cost_estimate=None):
         decisions = []
         total_words = 0
+        
+        if len(atomic_facts) == 0:
+            # optionally, first detect if the response is abstained
+            response_abstained = is_response_abstained(generation, self.abstain_detection_type)
+            if not response_abstained:
+                # continue only when the response is not abstained
+                curr_afs, _ = self.af_generator.run(generation)
+                curr_afs = [fact for _, facts in curr_afs for fact in facts]
+                if len(curr_afs) > 0:
+                    atomic_facts = curr_afs
+                self.af_generator.save_cache()
+                
         for atom in atomic_facts:
             atom = atom.strip()
             if self.lm:
@@ -247,7 +266,6 @@ class FactScorer(object):
                         total_words += len(prompt.split())
                     continue
                 
-                print(prompt)
                 output = self.lm.generate(prompt)
 
                 # if type(output[1])==np.ndarray:
@@ -277,11 +295,8 @@ class FactScorer(object):
                 npprob = self.npm[knowledge_source].get_probabilty(topic, atom)
                 is_supported = npprob > 0.3
 
-            print(str(is_supported))
             decisions.append({"atom": atom, "is_supported": bool(is_supported)})
             
-            print("##########################")
-
         if cost_estimate:
             return total_words
         else:
@@ -362,14 +377,24 @@ if __name__ == '__main__':
         for line in f:
             dp = json.loads(line)
             tot += 1
-            if dp['topic'] == 'Francisco Urroz': continue
+            # if dp['topic'] == 'Francisco Urroz': continue
             if args.use_atomic_facts:
                 assert "annotations" in dp, "You can specify `--use_atomic_facts` only when atomic facts are available in the input data already."
                 if dp["annotations"] is None:
                     continue
                 topics.append(dp["topic"])
                 generations.append(dp["output"])
-                atomic_facts.append([atom["text"] for sent in dp["annotations"] for atom in sent["model-atomic-facts"]])
+                # atomic_facts.append([atom["text"] for sent in dp["annotations"] for atom in sent["model-atomic-facts"]])
+                if "annotations" in dp and dp["annotations"]:
+                    facts = []
+                    for sent in dp["annotations"]:
+                        if "model-atomic-facts" in sent and sent["model-atomic-facts"]:
+                            facts += [atom["text"] for atom in sent["model-atomic-facts"]]
+                        else:
+                            facts += []
+                    atomic_facts.append(facts)
+                else:
+                    atomic_facts.append([])
             else:
                 topics.append(dp["topic"])
                 generations.append(dp["output"])

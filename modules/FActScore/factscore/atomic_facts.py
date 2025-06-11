@@ -31,9 +31,9 @@ class AtomicFactGenerator(object):
                           model_dir="meta-llama/Llama-3.1-8B-Instruct",
                           cache_file=cache_file,
                           use_cache=True)
-        elif self.model == "llama2":
-            self.lm = CLM("inst-llama2-7B",
-                          model_dir="osunlp/attrscore-llama-7b",
+        elif self.model_name == "llama2":
+            self.lm = CLM("inst-llama-7B",
+                          model_dir=".cache/factscore/inst-llama-7B",
                           cache_file=cache_file,
                           use_cache=True)
         # get the demos
@@ -146,7 +146,9 @@ class AtomicFactGenerator(object):
             return total_words_estimate
         else:
             for prompt in prompts:
+                print("Propmt:\n", prompt)
                 output, _ = self.lm.generate(prompt)
+                print("Output:\n", output)
                 atoms[prompt_to_sent[prompt]] = text_to_sentences(output)
 
             for key, value in demons.items():

@@ -8,7 +8,8 @@ for LLM in InstructGPT
 do
     python -m factscore.factscorer \
         --input_path ../../../data/labeled/${LLM}.jsonl \
-        --model_name retrieval+llama \
+        --model_name retrieval+llama3 \
         --output_path ../../outputs/factscore \
-        --verbose > ../../outputs/logs/factscore_${LLM}_log_llama2.txt
+        --verbose \
+        --use_atomic_facts
 done
