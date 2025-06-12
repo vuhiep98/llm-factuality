@@ -380,21 +380,17 @@ if __name__ == '__main__':
             # if dp['topic'] == 'Francisco Urroz': continue
             if args.use_atomic_facts:
                 assert "annotations" in dp, "You can specify `--use_atomic_facts` only when atomic facts are available in the input data already."
-                if dp["annotations"] is None:
-                    continue
+                # atomic_facts.append([atom["text"] for sent in dp["annotations"] for atom in sent["model-atomic-facts"]])
                 topics.append(dp["topic"])
                 generations.append(dp["output"])
-                # atomic_facts.append([atom["text"] for sent in dp["annotations"] for atom in sent["model-atomic-facts"]])
+                facts = []
                 if "annotations" in dp and dp["annotations"]:
-                    facts = []
                     for sent in dp["annotations"]:
                         if "model-atomic-facts" in sent and sent["model-atomic-facts"]:
                             facts += [atom["text"] for atom in sent["model-atomic-facts"]]
                         else:
                             facts += []
-                    atomic_facts.append(facts)
-                else:
-                    atomic_facts.append([])
+                atomic_facts.append(facts)
             else:
                 topics.append(dp["topic"])
                 generations.append(dp["output"])
