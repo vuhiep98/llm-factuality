@@ -10,5 +10,7 @@ do
         --input_path ../../../data/labeled/${LLM}.jsonl \
         --model_name retrieval+llama3 \
         --output_path /mnt/localssd/outputs/factscore \
-        --verbose
+        --verbose \
+        --n_samples 1 \
+        --use_atomic_facts
 done
