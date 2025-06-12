@@ -28,12 +28,12 @@ class AtomicFactGenerator(object):
             self.lm = OpenAIModel("InstructGPT", cache_file=cache_file, key_path=key_path)
         elif self.model_name == "llama3":
             self.lm = CLM("llama3.1-8B",
-                          model_dir="meta-llama/Llama-3.1-8B-Instruct",
+                          model_dir="/mnt/localssd/Llama-3.1-8B-Instruct",
                           cache_file=cache_file,
                           use_cache=True)
         elif self.model_name == "llama2":
             self.lm = CLM("inst-llama-7B",
-                          model_dir=".cache/factscore/inst-llama-7B",
+                          model_dir="/mnt/localssd/.cache/factscore/inst-llama-7B",
                           cache_file=cache_file,
                           use_cache=True)
         # get the demos
@@ -146,9 +146,7 @@ class AtomicFactGenerator(object):
             return total_words_estimate
         else:
             for prompt in prompts:
-                print("Propmt:\n", prompt)
                 output, _ = self.lm.generate(prompt)
-                print("Output:\n", output)
                 atoms[prompt_to_sent[prompt]] = text_to_sentences(output)
 
             for key, value in demons.items():
