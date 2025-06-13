@@ -20,9 +20,9 @@ class FactScorer(object):
 
     def __init__(self,
                  model_name="retrieval+ChatGPT",
-                 data_dir="/mnt/localssd/.cache/factscore",
-                 model_dir="/mnt/localssd/.cache/factscore",
-                 cache_dir="/mnt/localssd/.cache/factscore",
+                 data_dir=".cache/factscore",
+                 model_dir=".cache/factscore",
+                 cache_dir=".cache/factscore",
                  openai_key="api.key",
                  cost_estimate="consider_cache",
                  abstain_detection_type=None,
@@ -47,12 +47,12 @@ class FactScorer(object):
 
         if "llama3" in model_name:
             self.lm = CLM(model_name="Llama-3.1-8B-Instruct",
-                          model_dir="/mnt/localssd",
+                          model_dir=".cache/factscore",
                           cache_file=os.path.join(cache_dir, "llama3.1-8B-Instruct.pkl"),
                           use_cache=True)
         elif "llama2" in model_name:
             self.lm = CLM(model_name="inst-llama-7B",
-                          model_dir="/mnt/localssd/.cache/factscore",
+                          model_dir=".cache/factscore",
                           cache_file=os.path.join(cache_dir, "inst-llama-7B.pkl"),
                           use_cache=True)
         elif "ChatGPT" in model_name:
@@ -357,13 +357,13 @@ if __name__ == '__main__':
                         default="api.key")
     parser.add_argument('--data_dir',
                         type=str,
-                        default="/mnt/localssd/.cache/factscore/")
+                        default=".cache/factscore/")
     parser.add_argument('--model_dir',
                         type=str,
-                        default="/mnt/localssd/.cache/factscore/")
+                        default=".cache/factscore/")
     parser.add_argument('--cache_dir',
                         type=str,
-                        default="/mnt/localssd/.cache/factscore/")
+                        default=".cache/factscore/")
     parser.add_argument('--knowledge_source',
                         type=str,
                         default=None)
