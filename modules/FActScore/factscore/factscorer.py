@@ -160,7 +160,7 @@ class FactScorer(object):
                     if response_abstained:
                         atomic_facts.append(None)
                         continue
-                    curr_afs, _ = self.af_generator.run(gen, cost_estimate=self.cost_estimate)
+                    curr_afs, _ = self.af_generator.run(gen)
                     curr_afs = [fact for _, facts in curr_afs for fact in facts]
                     atomic_facts[i] = curr_afs
                     self.af_generator.save_cache()
