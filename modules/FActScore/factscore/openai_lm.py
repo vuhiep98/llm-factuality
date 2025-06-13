@@ -15,7 +15,7 @@ class OpenAIModel(LM):
         self.key_path = key_path
         self.temp = 0.7
         self.save_interval = 100
-        self.configs = json.load(open("/home/hiepnkv/kagayaki/fact-check/adobe/configs/configs.json"))
+        self.configs = json.load(open("../../../configs/configs.json"))
         super().__init__(cache_file)
 
     def load_model(self):
