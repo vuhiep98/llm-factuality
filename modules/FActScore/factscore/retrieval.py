@@ -1,6 +1,7 @@
 import json
 import time
 import os
+import re
 
 import sqlite3
 import numpy as np
@@ -94,16 +95,24 @@ class DocDB(object):
 
         self.connection.commit()
         self.connection.close()
+        
+    def process_passage(self, passage):
+        SPECIAL_SEPARATOR = "####SPECIAL####SEPARATOR####"
+        passage = passage.replace(SPECIAL_SEPARATOR, "")
+        matches = re.findall(r'<s>(.*?)</s>', passage, re.DOTALL)
+        passage = "\n".join(matches)
+        return passage
 
     def get_text_from_title(self, title):
         """Fetch the raw text of the doc for 'doc_id'."""
         cursor = self.connection.cursor()
         cursor.execute("SELECT text FROM documents WHERE title = ?", (title,))
         results = cursor.fetchall()
-        results = [r for r in results]
+        # results = [r for r in results]
         cursor.close()
         assert results is not None and len(results)==1, f"`topic` in your data ({title}) is likely to be not a valid title in the DB."
-        results = [{"title": title, "text": para} for para in results[0][0].split(SPECIAL_SEPARATOR)]
+        # results = [{"title": title, "text": para} for para in results[0][0].split(SPECIAL_SEPARATOR)]
+        results = [{"title": title, "text": self.process_passage(para[0])} for para in results]
         assert len(results)>0, f"`topic` in your data ({title}) is likely to be not a valid title in the DB."
         return results
 
@@ -179,7 +188,8 @@ class Retrieval(object):
         if topic in self.embed_cache:
             passage_vectors = self.embed_cache[topic]
         else:
-            inputs = [psg["title"] + " " + psg["text"].replace("<s>", "").replace("</s>", "") for psg in passages]
+            # inputs = [psg["title"] + " " + psg["text"].replace("<s>", "").replace("</s>", "") for psg in passages]
+            inputs = [psg["text"] for psg in passages]
             passage_vectors = self.encoder.encode(inputs, batch_size=self.batch_size, device=self.encoder.device)
             self.embed_cache[topic] = passage_vectors
             self.add_n_embed += 1
@@ -197,12 +207,12 @@ class Retrieval(object):
         if cache_key not in self.cache:
             passages = self.db.get_text_from_title(topic)
             if self.retrieval_type=="bm25":
-                self.cache[cache_key] = self.get_bm25_passages(topic, retrieval_query, passages, k)
+                passages = self.get_bm25_passages(topic, retrieval_query, passages, k)
             else:
-                self.cache[cache_key] = self.get_gtr_passages(topic, retrieval_query, passages, k)
+                passages = self.get_gtr_passages(topic, retrieval_query, passages, k)
+            self.cache[cache_key] = passages
             assert len(self.cache[cache_key]) in [k, len(passages)]
             self.add_n += 1
-        
             
         return self.cache[cache_key]
 

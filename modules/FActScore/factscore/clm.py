@@ -14,7 +14,7 @@ from tqdm import tqdm
 from collections import defaultdict
 
 from transformers import AutoModelForCausalLM
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, LlamaTokenizer
 
 from factscore.utils import convert_model_to_int8_on_gpu
 from factscore.lm import LM
@@ -27,9 +27,11 @@ class CLM(LM):
             super().__init__(cache_file, use_cache)
 
     def load_model(self):
-        self.model = AutoModelForCausalLM.from_pretrained(self.model_dir, device_map="auto", torch_dtype="auto")
-        # self.model = convert_model_to_int8_on_gpu(self.model, device='cuda')
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_dir)
+        self.model = AutoModelForCausalLM.from_pretrained(os.path.join(self.model_dir, self.model_name), 
+                                                          device_map="auto", torch_dtype="auto")
+        if self.model_name == "inst-llama-7B":
+            self.model = convert_model_to_int8_on_gpu(self.model, device='cuda')
+        self.tokenizer = AutoTokenizer.from_pretrained(os.path.join(self.model_dir, self.model_name))
 
     def _generate(self, prompts, max_sequence_length=2048, max_output_length=128,
                   end_if_newline=False, end_if_second_newline=False, verbose=False):

@@ -12,8 +12,8 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-bert_tokenizer = BertTokenizer.from_pretrained("google-bert/bert-base-uncased")
-bert_model = BertModel.from_pretrained("google-bert/bert-base-uncased", device_map="cuda")
+# bert_tokenizer = BertTokenizer.from_pretrained("google-bert/bert-base-uncased")
+# bert_model = BertModel.from_pretrained("google-bert/bert-base-uncased", device_map="cuda")
 
 def read_jsonl(file_path):
     data = []
