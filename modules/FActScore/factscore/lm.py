@@ -11,6 +11,7 @@ class LM(object):
             self.cache_dict = self.load_cache()
         else:
             self.cache_file = None
+            self.cachec_dict = None
         self.model = None
         self.add_n = 0
 
