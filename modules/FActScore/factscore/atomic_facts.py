@@ -32,7 +32,7 @@ class AtomicFactGenerator(object):
                           cache_file=cache_file,
                           use_cache=True)
         elif self.model_name == "llama2":
-            self.lm = CLM("inst-llama-7B",
+            self.lm = CLM(model_name="inst-llama-7B",
                           model_dir="/mnt/localssd/.cache/factscore",
                           cache_file=cache_file,
                           use_cache=True)

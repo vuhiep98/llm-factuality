@@ -19,14 +19,15 @@ tfm_logging.set_verbosity_error()
 class FactScorer(object):
 
     def __init__(self,
-                 model_name="retrieval+ChatGPT",
+                 model_name="ChatGPT+retrieval+ChatGPT",
                  data_dir="/mnt/localssd/.cache/factscore",
                  model_dir="/mnt/localssd/.cache/factscore",
                  cache_dir="/mnt/localssd/.cache/factscore",
                  openai_key="api.key",
                  cost_estimate="consider_cache",
                  abstain_detection_type=None,
-                 batch_size=256):
+                 batch_size=256,
+                 use_cache=True):
         # assert model_name in ["retrieval+llama", "retrieval+llama+npm", "retrieval+ChatGPT", "npm", "retrieval+ChatGPT+npm"]
         self.model_name = model_name
 
@@ -44,18 +45,20 @@ class FactScorer(object):
 
         self.af_generator = None
         self.cost_estimate = cost_estimate
+        sefl.use_cache = use_cache
 
-        if "llama3" in model_name:
+        llm_model_name = self.model_name.split("+")[-1]
+        if llm_model_name == "llama3":
             self.lm = CLM(model_name="Llama-3.1-8B-Instruct",
                           model_dir="/mnt/localssd",
                           cache_file=os.path.join(cache_dir, "llama3.1-8B-Instruct.pkl"),
-                          use_cache=True)
-        elif "llama2" in model_name:
+                          use_cache=self.use_cache)
+        elif llm_model_name == "llama2":
             self.lm = CLM(model_name="inst-llama-7B",
                           model_dir="/mnt/localssd/.cache/factscore",
                           cache_file=os.path.join(cache_dir, "inst-llama-7B.pkl"),
-                          use_cache=True)
-        elif "ChatGPT" in model_name:
+                          use_cache=self.use_cache)
+        elif llm_model_name == "ChatGPT":
             self.lm = OpenAIModel("ChatGPT", 
                                 cache_file=os.path.join(self.cache_dir, "GPT4.pkl"), 
                                 key_path=openai_key,)
@@ -132,24 +135,25 @@ class FactScorer(object):
             assert len(topics)==len(generations), "`topics` and `generations` should have the same length"
 
         if self.af_generator is None:
-            # if "ChatGPT" in self.model_name:
-            self.af_generator = AtomicFactGenerator(
-                key_path=self.openai_key,
-                demon_dir=os.path.join(self.data_dir, "demos"),
-                cache_file=os.path.join(self.cache_dir, "AT_InstructGPT.pkl")
-            )
-            # elif "llama2" in self.model_name:
-            #     self.af_generator = AtomicFactGenerator(
-            #         demon_dir=os.path.join(self.data_dir, "demos"), 
-            #         model_name="llama2",
-            #         cache_file=os.path.join(self.cache_dir, "af-inst-llama-7B.pkl")
-            #     )
-            # elif "llama3" in self.model_name:
-            #     self.af_generator = AtomicFactGenerator(
-            #         demon_dir=os.path.join(self.data_dir, "demos"), 
-            #         model_name="llama3",
-            #         cache_file=os.path.join(self.cache_dir, "af-llama3.1-8B-Instruct.pkl")
-            #     )
+            af_gen_name = self.model_name.split("+")[0]
+            if af_gen_name == "ChatGPT":
+                self.af_generator = AtomicFactGenerator(
+                    key_path=self.openai_key,
+                    demon_dir=os.path.join(self.data_dir, "demos"),
+                    cache_file=os.path.join(self.cache_dir, "AT_InstructGPT.pkl")
+                )
+            elif af_gen_name == "llama2":
+                self.af_generator = AtomicFactGenerator(
+                    demon_dir=os.path.join(self.data_dir, "demos"), 
+                    model_name="llama2",
+                    cache_file=os.path.join(self.cache_dir, "af-inst-llama-7B.pkl")
+                )
+            elif af_gen_name == "llama3":
+                self.af_generator = AtomicFactGenerator(
+                    demon_dir=os.path.join(self.data_dir, "demos"), 
+                    model_name="llama3",
+                    cache_file=os.path.join(self.cache_dir, "af-llama3.1-8B-Instruct.pkl")
+                )
         
         if atomic_facts is not None:
             assert len(topics)==len(atomic_facts), "`topics` and `atomic_facts` should have the same length"
@@ -310,7 +314,7 @@ if __name__ == '__main__':
                         default="data/labeled/InstructGPT.jsonl")
     parser.add_argument('--model_name',
                         type=str,
-                        default="retrieval+ChatGPT")
+                        default="ChatGPT+retrieval+ChatGPT")
     parser.add_argument('--gamma',
                         type=int,
                         default=10,
@@ -319,6 +323,9 @@ if __name__ == '__main__':
                         type=str,
                         default="outputs/labeled/InstructGPT_factscore.json",
                         help="output path to save the results")
+    parser.add_argument('--use_cache',
+                        action="store_true",
+                        help="whether to use cache for the model and retrieval")
 
     parser.add_argument('--openai_key',
                         type=str,
