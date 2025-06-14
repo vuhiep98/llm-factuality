@@ -157,7 +157,62 @@ class FactScorer(object):
         
         if atomic_facts is not None:
             assert len(topics)==len(atomic_facts), "`topics` and `atomic_facts` should have the same length"
+        
+        if atomic_facts is not None:
+            assert len(topics)==len(atomic_facts), "`topics` and `atomic_facts` should have the same length"
+            # Some model atomic facts are empty, re-generate them
+            for i, (facts, gen) in enumerate(zip(atomic_facts, generations)):
+                if len(facts) == 0:
+                    if self.af_generator is None:
+                        # if "ChatGPT" in self.model_name:
+                        self.af_generator = AtomicFactGenerator(
+                            key_path=self.openai_key,
+                            demon_dir=os.path.join(self.data_dir, "demos"),
+                            cache_file=os.path.join(self.cache_dir, "AT_InstructGPT.pkl")
+                        )
+                        # elif "llama2" in self.model_name:
+                        #     self.af_generator = AtomicFactGenerator(
+                        #         demon_dir=os.path.join(self.data_dir, "demos"), 
+                        #         model_name="llama2",
+                        #         cache_file=os.path.join(self.cache_dir, "af-inst-llama-7B.pkl")
+                        #     )
+                        # elif "llama3" in self.model_name:
+                        #     self.af_generator = AtomicFactGenerator(
+                        #         demon_dir=os.path.join(self.data_dir, "demos"), 
+                        #         model_name="llama3",
+                        #         cache_file=os.path.join(self.cache_dir, "af-llama3.1-8B-Instruct.pkl")
+                        #     )
+                    
+                    response_abstained = is_response_abstained(gen, self.abstain_detection_type)
+                    if response_abstained:
+                        atomic_facts.append(None)
+                        continue
+                    curr_afs, _ = self.af_generator.run(gen)
+                    curr_afs = [fact for _, facts in curr_afs for fact in facts]
+                    atomic_facts[i] = curr_afs
+                    self.af_generator.save_cache()
         else:
+            
+            if self.af_generator is None:
+                # if "ChatGPT" in self.model_name:
+                self.af_generator = AtomicFactGenerator(
+                    key_path=self.openai_key,
+                    demon_dir=os.path.join(self.data_dir, "demos"),
+                    cache_file=os.path.join(self.cache_dir, "AT_InstructGPT.pkl")
+                )
+                # elif "llama2" in self.model_name:
+                #     self.af_generator = AtomicFactGenerator(
+                #         demon_dir=os.path.join(self.data_dir, "demos"), 
+                #         model_name="llama2",
+                #         cache_file=os.path.join(self.cache_dir, "af-inst-llama-7B.pkl")
+                #     )
+                # elif "llama3" in self.model_name:
+                #     self.af_generator = AtomicFactGenerator(
+                #         demon_dir=os.path.join(self.data_dir, "demos"), 
+                #         model_name="llama3",
+                #         cache_file=os.path.join(self.cache_dir, "af-llama3.1-8B-Instruct.pkl")
+                #     )
+            
             if "ChatGPT" in self.model_name:
                 # estimate the total cost of atomic fact generation
                 total_words = 0
