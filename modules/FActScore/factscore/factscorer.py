@@ -431,7 +431,8 @@ if __name__ == '__main__':
                     cache_dir=args.cache_dir,
                     openai_key=args.openai_key,
                     cost_estimate=args.cost_estimate,
-                    abstain_detection_type=args.abstain_detection_type)
+                    abstain_detection_type=args.abstain_detection_type,
+                    use_cache=args.use_cache)
 
     tot = 0
     topics, generations, atomic_facts = [], [], []
