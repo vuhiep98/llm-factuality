@@ -45,7 +45,7 @@ class FactScorer(object):
 
         self.af_generator = None
         self.cost_estimate = cost_estimate
-        sefl.use_cache = use_cache
+        self.use_cache = use_cache
 
         llm_model_name = self.model_name.split("+")[-1]
         if llm_model_name == "llama3":
