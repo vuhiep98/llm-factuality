@@ -20,9 +20,9 @@ class FactScorer(object):
 
     def __init__(self,
                  model_name="ChatGPT+retrieval+ChatGPT",
-                 data_dir="/mnt/localssd/.cache/factscore",
-                 model_dir="/mnt/localssd/.cache/factscore",
-                 cache_dir="/mnt/localssd/.cache/factscore",
+                 data_dir=".cache/factscore",
+                 model_dir=".cache/factscore",
+                 cache_dir=".cache/factscore",
                  openai_key="api.key",
                  cost_estimate="consider_cache",
                  abstain_detection_type=None,
@@ -39,6 +39,7 @@ class FactScorer(object):
         self.abstain_detection_type = abstain_detection_type
 
         self.data_dir = data_dir
+        self.model_dir = model_dir
         self.cache_dir = cache_dir
         if not os.path.exists(cache_dir):
             os.makedirs(cache_dir)
@@ -50,12 +51,12 @@ class FactScorer(object):
         llm_model_name = self.model_name.split("+")[-1]
         if llm_model_name == "llama3":
             self.lm = CLM(model_name="Llama-3.1-8B-Instruct",
-                          model_dir="/mnt/localssd",
+                          model_dir=self.model_dir,
                           cache_file=os.path.join(cache_dir, "llama3.1-8B-Instruct.pkl"),
                           use_cache=self.use_cache)
         elif llm_model_name == "llama2":
             self.lm = CLM(model_name="inst-llama-7B",
-                          model_dir="/mnt/localssd/.cache/factscore",
+                          model_dir=self.model_dir,
                           cache_file=os.path.join(cache_dir, "inst-llama-7B.pkl"),
                           use_cache=self.use_cache)
         elif llm_model_name == "ChatGPT":
@@ -63,6 +64,7 @@ class FactScorer(object):
                                 cache_file=os.path.join(self.cache_dir, "GPT4.pkl"), 
                                 key_path=openai_key,)
         else:
+            print("None LLM is loaded")
             self.lm = None
 
     def save_cache(self):
@@ -387,13 +389,13 @@ if __name__ == '__main__':
                         default="api.key")
     parser.add_argument('--data_dir',
                         type=str,
-                        default="/mnt/localssd/.cache/factscore/")
+                        default=".cache/factscore/")
     parser.add_argument('--model_dir',
                         type=str,
-                        default="/mnt/localssd/.cache/factscore/")
+                        default=".cache/factscore/")
     parser.add_argument('--cache_dir',
                         type=str,
-                        default="/mnt/localssd/.cache/factscore/")
+                        default=".cache/factscore/")
     parser.add_argument('--knowledge_source',
                         type=str,
                         default=None)
