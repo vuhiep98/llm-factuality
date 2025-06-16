@@ -28,17 +28,13 @@ class AtomicFactGenerator(object):
             self.lm = OpenAIModel("InstructGPT", cache_file=cache_file, key_path=key_path)
         elif self.model_name == "llama3":
             self.lm = CLM(model_name="Llama-3.1-8B-Instruct",
-                        #   model_dir=".cache/factscore",
-                          model_dir="meta-llama",
+                          model_dir="/mnt/localssd",
                           cache_file=cache_file,
-                        #   use_cache=True)
                           use_cache=False)
         elif self.model_name == "llama2":
             self.lm = CLM("inst-llama-7B",
-                        #   model_dir=".cache/factscore",
-                          model_dir="meta-llama",
+                          model_dir="/mnt/localssd/.cache/factscore",
                           cache_file=cache_file,
-                        #   use_cache=True)
                           use_cache=False)
         # get the demos
         with open(self.demon_path, 'r') as f:
