@@ -51,14 +51,12 @@ class FactScorer(object):
         llm_model_name = self.model_name.split("+")[-1]
         if llm_model_name == "llama3":
             self.lm = CLM(model_name="Llama-3.1-8B-Instruct",
-                        #   model_dir=self.model_dir,
-                          model_dir="meta-llama",
+                          model_dir=self.model_dir,
                           cache_file=os.path.join(self.cache_dir, "llama3.1-8B-Instruct.pkl"),
                           use_cache=self.use_cache)
         elif llm_model_name == "llama2":
             self.lm = CLM(model_name="inst-llama-7B",
-                        #   model_dir=self.model_dir,
-                          model_dir="meta-llama",
+                          model_dir=self.model_dir,
                           cache_file=os.path.join(self.cache_dir, "inst-llama-7B.pkl"),
                           use_cache=self.use_cache)
         elif llm_model_name == "ChatGPT":
@@ -145,19 +143,21 @@ class FactScorer(object):
                 self.af_generator = AtomicFactGenerator(
                     key_path=self.openai_key,
                     demon_dir=os.path.join(self.data_dir, "demos"),
-                    cache_file=os.path.join(self.cache_dir, "AT_InstructGPT.pkl")
+                    cache_file=os.path.join(self.cache_dir, "AT_InstructGPT.pkl"),
                 )
             elif af_gen_name == "llama2":
                 self.af_generator = AtomicFactGenerator(
                     demon_dir=os.path.join(self.data_dir, "demos"), 
                     model_name="llama2",
-                    cache_file=os.path.join(self.cache_dir, "af-inst-llama-7B.pkl")
+                    cache_file=os.path.join(self.cache_dir, "af-inst-llama-7B.pkl"),
+                    use_cache=self.use_cache
                 )
             elif af_gen_name == "llama3":
                 self.af_generator = AtomicFactGenerator(
                     demon_dir=os.path.join(self.data_dir, "demos"), 
                     model_name="llama3",
-                    cache_file=os.path.join(self.cache_dir, "af-llama3.1-8B-Instruct.pkl")
+                    cache_file=os.path.join(self.cache_dir, "af-llama3.1-8B-Instruct.pkl"),
+                    use_cache=self.use_cache
                 )
         
         if atomic_facts is not None:
