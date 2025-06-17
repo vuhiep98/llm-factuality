@@ -28,9 +28,8 @@ class FactScorer(object):
                  abstain_detection_type=None,
                  batch_size=256,
                  use_cache=True):
-        # assert model_name in ["retrieval+llama", "retrieval+llama+npm", "retrieval+ChatGPT", "npm", "retrieval+ChatGPT+npm"]
+        
         self.model_name = model_name
-
         self.db = {}
         self.retrieval = {}
         self.npm = {}
@@ -138,28 +137,6 @@ class FactScorer(object):
 
         af_gen_name = self.model_name.split("+")[0]
         
-        if self.af_generator is None:
-            if af_gen_name == "ChatGPT":
-                self.af_generator = AtomicFactGenerator(
-                    key_path=self.openai_key,
-                    demon_dir=os.path.join(self.data_dir, "demos"),
-                    cache_file=os.path.join(self.cache_dir, "AT_InstructGPT.pkl"),
-                )
-            elif af_gen_name == "llama2":
-                self.af_generator = AtomicFactGenerator(
-                    demon_dir=os.path.join(self.data_dir, "demos"), 
-                    model_name="llama2",
-                    cache_file=os.path.join(self.cache_dir, "af-inst-llama-7B.pkl"),
-                    use_cache=self.use_cache
-                )
-            elif af_gen_name == "llama3":
-                self.af_generator = AtomicFactGenerator(
-                    demon_dir=os.path.join(self.data_dir, "demos"), 
-                    model_name="llama3",
-                    cache_file=os.path.join(self.cache_dir, "af-llama3.1-8B-Instruct.pkl"),
-                    use_cache=self.use_cache
-                )
-        
         if atomic_facts is not None:
             assert len(topics)==len(atomic_facts), "`topics` and `atomic_facts` should have the same length"
             # Some model atomic facts are empty, re-generate them
@@ -171,7 +148,7 @@ class FactScorer(object):
                             self.af_generator = AtomicFactGenerator(
                                 key_path=self.openai_key,
                                 demon_dir=os.path.join(self.data_dir, "demos"),
-                                cache_file=os.path.join(self.cache_dir, "AT_InstructGPT.pkl")
+                                cache_file=os.path.join(self.cache_dir, f"AT_InstructGPT.pkl")
                             )
                         elif af_gen_name == "llama2":
                             self.af_generator = AtomicFactGenerator(
@@ -248,7 +225,8 @@ class FactScorer(object):
 
         respond_ratio = np.mean([facts is not None for facts in atomic_facts])
 
-        if "ChatGPT" in self.model_name:
+        verificator = self.model_name.split("+")[-1]
+        if verificator == "ChatGPT":
             # estimate the total cost of response generation
             total_words = 0
             for topic, generation, facts in zip(topics, generations, atomic_facts):
@@ -264,11 +242,11 @@ class FactScorer(object):
         init_scores = []
         decisions = []
         for topic, generation, facts in zip(topics, generations, atomic_facts):
-            if facts is None:
+            if facts is None or len(facts) == 0:
                 decisions.append(None)
             else:
                 decision = self._get_score(topic, generation, facts, knowledge_source)
-                score = np.mean([d["is_supported"] for d in decision])
+                score = np.mean([d["is_supported"] for d in decision]) if len(decision) > 0 else 0.0
                 
                 if gamma:
                     init_scores.append(score)
@@ -389,7 +367,6 @@ if __name__ == '__main__':
     parser.add_argument('--knowledge_source',
                         type=str,
                         default=None)
-
 
     parser.add_argument('--cost_estimate',
                         type=str,
