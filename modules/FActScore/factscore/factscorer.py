@@ -47,18 +47,20 @@ class FactScorer(object):
         self.cost_estimate = cost_estimate
         self.use_cache = use_cache
 
-        llm_model_name = self.model_name.split("+")[-1]
-        if llm_model_name == "llama3":
+        self.llm_model_name = self.model_name.split("+")[-1]
+        self.af_gen_name = self.model_name.split("+")[0]
+        
+        if self.llm_model_name == "llama3":
             self.lm = CLM(model_name="Llama-3.1-8B-Instruct",
                           model_dir=self.model_dir,
                           cache_file=os.path.join(self.cache_dir, "llama3.1-8B-Instruct.pkl"),
                           use_cache=self.use_cache)
-        elif llm_model_name == "llama2":
+        elif self.llm_model_name == "llama2":
             self.lm = CLM(model_name="inst-llama-7B",
                           model_dir=self.model_dir,
                           cache_file=os.path.join(self.cache_dir, "inst-llama-7B.pkl"),
                           use_cache=self.use_cache)
-        elif llm_model_name == "ChatGPT":
+        elif self.llm_model_name == "ChatGPT":
             self.lm = OpenAIModel("ChatGPT", 
                                 cache_file=os.path.join(self.cache_dir, "GPT4.pkl"), 
                                 key_path=openai_key)
@@ -134,8 +136,6 @@ class FactScorer(object):
         else:
             assert type(topics)==type(generations)==list, "`topics` and `generations` should be lists."
             assert len(topics)==len(generations), "`topics` and `generations` should have the same length"
-
-        af_gen_name = self.model_name.split("+")[0]
         
         if atomic_facts is not None:
             assert len(topics)==len(atomic_facts), "`topics` and `atomic_facts` should have the same length"
@@ -143,20 +143,19 @@ class FactScorer(object):
             for i, (facts, gen) in enumerate(zip(atomic_facts, generations)):
                 if len(facts) == 0:
                     if self.af_generator is None:
-                        af_gen_name = self.model_name.split("+")[0]
-                        if af_gen_name == "ChatGPT":
+                        if self.af_gen_name == "ChatGPT":
                             self.af_generator = AtomicFactGenerator(
                                 key_path=self.openai_key,
                                 demon_dir=os.path.join(self.data_dir, "demos"),
                                 cache_file=os.path.join(self.cache_dir, f"AT_InstructGPT.pkl")
                             )
-                        elif af_gen_name == "llama2":
+                        elif self.af_gen_name == "llama2":
                             self.af_generator = AtomicFactGenerator(
                                 demon_dir=os.path.join(self.data_dir, "demos"), 
                                 model_name="llama2",
                                 cache_file=os.path.join(self.cache_dir, "af-inst-llama-7B.pkl")
                             )
-                        elif af_gen_name == "llama3":
+                        elif self.af_gen_name == "llama3":
                             self.af_generator = AtomicFactGenerator(
                                 demon_dir=os.path.join(self.data_dir, "demos"), 
                                 model_name="llama3",
@@ -173,26 +172,26 @@ class FactScorer(object):
                     self.af_generator.save_cache()
         else:
             if self.af_generator is None:
-                if af_gen_name == "ChatGPT":
+                if self.af_gen_name == "ChatGPT":
                     self.af_generator = AtomicFactGenerator(
                         key_path=self.openai_key,
                         demon_dir=os.path.join(self.data_dir, "demos"),
                         cache_file=os.path.join(self.cache_dir, "AT_InstructGPT.pkl")
                     )
-                elif af_gen_name == "llama2":
+                elif self.af_gen_name == "llama2":
                     self.af_generator = AtomicFactGenerator(
                         demon_dir=os.path.join(self.data_dir, "demos"), 
                         model_name="llama2",
                         cache_file=os.path.join(self.cache_dir, "af-inst-llama-7B.pkl")
                     )
-                elif af_gen_name == "llama3":
+                elif self.af_gen_name == "llama3":
                     self.af_generator = AtomicFactGenerator(
                         demon_dir=os.path.join(self.data_dir, "demos"), 
                         model_name="llama3",
                         cache_file=os.path.join(self.cache_dir, "af-llama3.1-8B-Instruct.pkl")
                     )
             
-            if af_gen_name == "ChatGPT":
+            if self.af_gen_name == "ChatGPT":
                 # estimate the total cost of atomic fact generation
                 total_words = 0
                 for gen in generations:
@@ -306,16 +305,25 @@ class FactScorer(object):
                     continue
                 
                 output = self.lm.generate(prompt)
-                generated_answer = output[0].lower()
-                if "true" in generated_answer or "false" in generated_answer:
-                    if "true" in generated_answer and "false" not in generated_answer:
-                        is_supported = True
-                    elif "false" in generated_answer and "true" not in generated_answer:
-                        is_supported = False
-                    else:
-                        is_supported = generated_answer.index("true") > generated_answer.index("false")
+                
+                if self.llm_model_name == "llama2" and type(output[1])==np.ndarray:
+                    # when logits are available
+                    logits = np.array(output[1])
+                    assert logits.shape[0] in [32000, 32001]
+                    true_score = logits[5852]
+                    false_score = logits[7700]
+                    is_supported = true_score > false_score
                 else:
-                    is_supported = all([keyword not in generated_answer.lower().translate(str.maketrans("", "", string.punctuation)).split() for keyword in ["not", "cannot", "unknown", "information"]])
+                    generated_answer = output[0].lower()
+                    if "true" in generated_answer or "false" in generated_answer:
+                        if "true" in generated_answer and "false" not in generated_answer:
+                            is_supported = True
+                        elif "false" in generated_answer and "true" not in generated_answer:
+                            is_supported = False
+                        else:
+                            is_supported = generated_answer.index("true") > generated_answer.index("false")
+                    else:
+                        is_supported = all([keyword not in generated_answer.lower().translate(str.maketrans("", "", string.punctuation)).split() for keyword in ["not", "cannot", "unknown", "information"]])
 
             else:
                 is_supported = True
