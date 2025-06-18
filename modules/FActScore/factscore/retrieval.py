@@ -108,11 +108,11 @@ class DocDB(object):
         cursor = self.connection.cursor()
         cursor.execute("SELECT text FROM documents WHERE title = ?", (title,))
         results = cursor.fetchall()
-        # results = [r for r in results]
+        results = [r for r in results]
         cursor.close()
         assert results is not None and len(results)==1, f"`topic` in your data ({title}) is likely to be not a valid title in the DB."
-        # results = [{"title": title, "text": para} for para in results[0][0].split(SPECIAL_SEPARATOR)]
-        results = [{"title": title, "text": self.process_passage(para[0])} for para in results]
+        results = [{"title": title, "text": para} for para in results[0][0].split(SPECIAL_SEPARATOR)]
+        # results = [{"title": title, "text": self.process_passage(para[0])} for para in results]
         assert len(results)>0, f"`topic` in your data ({title}) is likely to be not a valid title in the DB."
         return results
 
@@ -188,8 +188,8 @@ class Retrieval(object):
         if topic in self.embed_cache:
             passage_vectors = self.embed_cache[topic]
         else:
-            # inputs = [psg["title"] + " " + psg["text"].replace("<s>", "").replace("</s>", "") for psg in passages]
-            inputs = [psg["text"] for psg in passages]
+            inputs = [psg["title"] + " " + psg["text"].replace("<s>", "").replace("</s>", "") for psg in passages]
+            # inputs = [psg["text"] for psg in passages]
             passage_vectors = self.encoder.encode(inputs, batch_size=self.batch_size, device=self.encoder.device)
             self.embed_cache[topic] = passage_vectors
             self.add_n_embed += 1

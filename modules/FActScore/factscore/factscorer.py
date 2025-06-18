@@ -61,7 +61,7 @@ class FactScorer(object):
         elif llm_model_name == "ChatGPT":
             self.lm = OpenAIModel("ChatGPT", 
                                 cache_file=os.path.join(self.cache_dir, "GPT4.pkl"), 
-                                key_path=openai_key,)
+                                key_path=openai_key)
         else:
             print("None LLM is loaded")
             self.lm = None

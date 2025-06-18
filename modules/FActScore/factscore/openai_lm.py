@@ -15,16 +15,10 @@ class OpenAIModel(LM):
         self.key_path = key_path
         self.temp = 0.7
         self.save_interval = 100
-        self.configs = json.load(open("../../../configs/configs.json"))
+        self.configs = json.load(open(key_path))
         super().__init__(cache_file)
 
     def load_model(self):
-        # load api key
-        # key_path = self.key_path
-        # assert os.path.exists(key_path), f"Please place your OpenAI APT Key in {key_path}."
-        # with open(key_path, 'r') as f:
-        #     api_key = f.readline()
-        # openai.api_key = api_key.strip()
         self.model = self.model_name
 
     def _generate(self, prompt, max_sequence_length=2048, max_output_length=128):
