@@ -224,8 +224,7 @@ class FactScorer(object):
 
         respond_ratio = np.mean([facts is not None for facts in atomic_facts])
 
-        verificator = self.model_name.split("+")[-1]
-        if verificator == "ChatGPT":
+        if self.llm_model_name == "ChatGPT":
             # estimate the total cost of response generation
             total_words = 0
             for topic, generation, facts in zip(topics, generations, atomic_facts):

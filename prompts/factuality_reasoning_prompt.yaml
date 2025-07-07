@@ -1,36 +1,25 @@
-system: |-
-  You are an useful AI assistant. Your task is to estimate the factuality of a large language model (LLM) based on its given input by following these steps:
+user: |-
+  You are a helpful assistant that evaluates the factuality of a given text. To evaluate the factuality, you will do the following steps:
 
-  Step 1: Segment the given output into sentences.
-  Step 2: Breakdown each sentence into independent facts and group the independent facts by sentence. Each fact is a short statement that contains one piece of information.
-  Step 3: For each independent fact, find the relevant information in the Wikipedia and determine whether the fact is true or false. The fact is true if the relevant information found in the Wikipedia supports the fact. The fact is false if the relevant information refute (does not support) the fact.
+  # Step 1: Break the given text into atomic facts. The atomic facts are short statements that contain one piece of information.
 
-  The final output must be in JSON format as follow:
+  # Step 2: Search for the relevant documents for each atomic fact from Wikipedia.
 
-  ```json
-  {
-    "factscores": [
-      {
-        "sentence": <sentence>,
-        "atomic_facts": [
-          {
-            "atom: <fact>, 
-            "is_supported": <True/False>, 
-            "wikipedia_evidence": <wikipedia evidence that supports or refutes the fact, "none" if no evidence is found>
-          },
-          ...(other atomic facts)
-        ]
-      },
-      ...(other sentences)
-    ]
-  }
+  # Step 3: Identify each atomic fact is supported by the collected documents or not. The output must be true (if the atomic fact is supported) or false (if the atomic fact is not supported).
+
+  Here is the format of the final output:
+
+  ```OUTPUT
+  [
+      {{
+          "atom": <atomic fact content>,
+          "is_supported": true or false (No further explanation)
+      }},
+      ... (other atomic facts)
+  ]
   ```
 
-  Notes:
-  - The wikipedia evidence is directly quoted from Wikipedia.
-  - The atomic facts are grouped by sentences.
-
-user: |-
+  Here is the given text:
   {llm_output}
 
   Let's think step by step.

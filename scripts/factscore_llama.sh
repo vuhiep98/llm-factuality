@@ -11,5 +11,7 @@ CUDA_VISIBLE_DEVICES=${GPU} python -m factscore.factscorer \
     --model_dir .cache/factscore \
     --data_dir .cache/factscore \
     --cache_dir .cache/factscore \
+    --openai_key ../../../configs/configs.json \
     --verbose \
-    --use_atomic_facts
+    --use_atomic_facts \
+    --use_cache
