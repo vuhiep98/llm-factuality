@@ -1,0 +1,4 @@
+user: |-
+  Please distord following fact by changing a piece (or pieces) of information within the fact with another one. Do not change the proper nouns and the output must not contain any other text except for the distorded fact:
+
+  {fact}

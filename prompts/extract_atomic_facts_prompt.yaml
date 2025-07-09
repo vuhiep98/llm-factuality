@@ -1,0 +1,50 @@
+user: |-
+  Please breakdown the following sentence into independent facts: In 1963, Collins became one of the third group of astronauts selected by NASA and he served as the back-up Command Module Pilot for the Gemini 7 mission.
+  - Collins became an astronaut.
+  - Collins became one of the third group of astronauts.
+  - Collins became one of the third group of astronauts selected.
+  - Collins became one of the third group of astronauts selected by NASA.
+  - Collins became one of the third group of astronauts selected by NASA in 1963.
+  - Collins served as the Command Module Pilot.
+  - Collins served as the back-up Command Module Pilot.
+  - Collins served as the Command Module Pilot for the Gemini 7 mission.
+
+  Please breakdown the following sentence into independent facts: In addition to his acting roles, Bateman has written and directed two short films and is currently in development on his feature debut.
+  - Bateman has acting roles.
+  - Bateman has written two short films.
+  - Bateman has directed two short films.
+  - Bateman has written and directed two short films.
+  - Bateman is currently in development on his feature debut.
+
+  Please breakdown the following sentence into independent facts: Michael Collins (born October 31, 1930) is a retired American astronaut and test pilot who was the Command Module Pilot for the Apollo 11 mission in 1969.
+  - Michael Collins was born on October 31, 1930.
+  - Michael Collins is retired.
+  - Michael Collins is an American.
+  - Michael Collins was an astronaut.
+  - Michael Collins was a test pilot.
+  - Michael Collins was the Command Module Pilot.
+  - Michael Collins was the Command Module Pilot for the Apollo 11 mission.
+  - Michael Collins was the Command Module Pilot for the Apollo 11 mission in 1969.
+
+  Please breakdown the following sentence into independent facts: During his professional career, McCoy played for the Broncos, the San Diego Chargers, the Minnesota Vikings, and the Jacksonville Jaguars.
+  - McCoy played for the Broncos.
+  - McCoy played for the Broncos during his professional career.
+  - McCoy played for the San Diego Chargers.
+  - McCoy played for the San Diego Chargers during his professional career.
+  - McCoy played for the Minnesota Vikings.
+  - McCoy played for the Minnesota Vikings during his professional career.
+  - McCoy played for the Jacksonville Jaguars.
+  - McCoy played for the Jacksonville Jaguars during his professional career.
+
+  Please breakdown the following sentence into independent facts: Miller has been described as the architect of Trump's controversial immigration policies, and has previously worked for Alabama Senator Jeff Sessions on immigration issues.
+  - Miller has been described as the architect.
+  - Miller has been described as the architect of Trump's controversial immigration policies.
+  - Miller has previously worked for Alabama Senator Jeff Sessions.
+  - Miller has previously worked for Alabama Senator Jeff Sessions on immigration issues.
+
+  Please breakdown the following sentence into independent facts: Song Kang-ho was born in Gongju, South Korea in 1967.
+  - Song Kang-ho was born in Gongju.
+  - Song Kang-ho was born in South Korea.
+  - Song Kang-ho was born in 1967.
+
+  Please breakdown the following sentence into independent facts: {sentence}

@@ -49,12 +49,12 @@ class FactReasoner:
                     inputs = inputs.to(self.model.device)
                     outputs = self.model.generate(inputs, max_new_tokens=8192)
                     response = self.tokenizer.decode(outputs[0][len(inputs[0]):], skip_special_tokens=True)
-                response = self._extract_predicted_facts(response)
+                atomic_facts = self._extract_predicted_facts(response)
                 break
             except Exception as e:
-                response = []
+                atomic_facts = []
                 print(str(e) + "\nRetrying...")
-        return response
+        return atomic_facts, response
     
     def _extract_predicted_facts(self, response):
         predicted_facts = re.findall(r"```OUTPUT\n([\s\S]*)```", response)[0]
@@ -69,9 +69,9 @@ class FactReasoner:
     
     def _fact_reasoning_output(self, llm_output):
         message = self._build_fact_reasoning_message(llm_output)
-        predicted_facts = self._reasoning(message)
+        predicted_facts, response = self._reasoning(message)
         factscore = self._calculate_factuality(predicted_facts)
-        return factscore, predicted_facts
+        return factscore, predicted_facts, response
     
     def factual_reasoning(self, input_file, verbosity=True, save_output=True):
         inputs = self._read_input(input_file)
@@ -80,15 +80,16 @@ class FactReasoner:
             
         predicted_facts = []
         scores = []
+        responses = []
         for input in inputs:
-            score, facts = self._fact_reasoning_output(input["output"])
+            score, facts, full_response = self._fact_reasoning_output(input["output"])
             scores.append(score)
-            predicted_facts.append({"topic": input["topic"], "output": facts})
+            predicted_facts.append({"topic": input["topic"], "atomic-facts": facts, "full-response": full_response})
         
         factscore = np.mean(scores)
         
-        with open(root_dir/"llm-factuality/outputs/factscore_reasoning/" + input_file.split("/")[-1].replace(".jsonl", ".json"), "w") as f:
-            json.dump(predicted_facts, f, indent=2)
+        with open(root_dir/"outputs/factscore_reasoning"/input_file.split("/")[-1].replace(".jsonl", ".json"), "w") as f:
+            json.dump({"score": factscore, "factscore-output": predicted_facts}, f, indent=2)
         
         return factscore
         
